@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>SentinelaBot</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; background: #f9f9f9; }
+    #chat { max-width: 600px; margin: auto; }
+    #avatar { float: left; margin-right: 10px; width: 60px; border-radius: 50%; }
+    #messages { margin-top: 20px; background: #fff; padding: 10px; border-radius: 8px; min-height: 200px; }
+    #user-input { width: 100%; padding: 10px; margin-top: 10px; }
+    button { padding: 10px 20px; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <div id="chat">
+    <img id="avatar" src="/avatar.jpg" alt="Avatar do SentinelaBot">
+    <h2>SentinelaBot - Gemini</h2>
+    <div id="messages">Converse comigo! 👇</div>
+    <textarea id="user-input" rows="3" placeholder="Digite sua mensagem..."></textarea><br>
+    <button onclick="sendMessage()">Enviar</button>
+  </div>
+
+  <script>
+    async function sendMessage() {
+      const input = document.getElementById('user-input');
+      const messages = document.getElementById('messages');
+      const userMessage = input.value.trim();
+      if (!userMessage) return;
+
+      messages.innerHTML += `<p><strong>Você:</strong> ${userMessage}</p>`;
+      input.value = '';
+
+      try {
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: userMessage })
+        });
+
+        const data = await response.json();
+        const resposta = data.text || "Erro ao processar resposta.";
+        messages.innerHTML += `<p><strong>SentinelaBot:</strong> ${resposta}</p>`;
+      } catch (error) {
+        messages.innerHTML += `<p style="color:red;"><strong>Erro:</strong> ${error.message}</p>`;
+      }
+    }
+  </script>
+</body>
+</html>
