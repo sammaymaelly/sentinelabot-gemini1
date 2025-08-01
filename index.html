@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SentinelaBot</title>
+  <style>
+    body { font-family: Arial, sans-serif; background-color: #f5f5f5; display: flex; justify-content: center; align-items: center; height: 100vh; }
+    #chat-container { background: white; border-radius: 10px; padding: 20px; width: 90%; max-width: 600px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    .message { margin: 10px 0; padding: 10px; border-radius: 5px; }
+    .user { background-color: #007bff; color: white; text-align: right; }
+    .bot { background-color: #e0e0e0; color: #333; }
+    #form { display: flex; margin-top: 10px; }
+    #input { flex-grow: 1; padding: 10px; border-radius: 5px; border: 1px solid #ccc; }
+    button { padding: 10px; border: none; border-radius: 5px; background-color: #007bff; color: white; margin-left: 5px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div id="chat-container">
+    <div id="messages"></div>
+    <form id="form">
+      <input id="input" placeholder="Digite sua mensagem..." autocomplete="off" />
+      <button type="submit">Enviar</button>
+    </form>
+  </div>
+
+  <script>
+    const form = document.getElementById('form');
+    const input = document.getElementById('input');
+    const messages = document.getElementById('messages');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const userMessage = input.value.trim();
+      if (!userMessage) return;
+
+      addMessage(userMessage, 'user');
+      input.value = '';
+      addMessage("Pensando...", 'bot');
+
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: userMessage })
+      });
+
+      const data = await res.json();
+      messages.lastChild.textContent = data.response;
+    });
+
+    function addMessage(text, type) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      div.className = `message ${type}`;
+      messages.appendChild(div);
+      messages.scrollTop = messages.scrollHeight;
+    }
+  </script>
+</body>
+</html>
