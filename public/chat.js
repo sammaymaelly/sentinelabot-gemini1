@@ -1,27 +1,52 @@
 console.log("Chat iniciado!");
 
-const loadingDiv = document.getElementById("loading");
-const outputDiv = document.getElementById("output");
+const chatWindow = document.getElementById("chat-window");
 const input = document.getElementById("userInput");
+const sendBtn = document.getElementById("sendBtn");
 
-// Mostra mensagem inicial depois de 1s
-if (loadingDiv) {
-  setTimeout(() => {
-    loadingDiv.innerHTML = "SentinelaBot pronto! Como posso te ajudar?";
-  }, 1000);
-} else {
-  console.error("Elemento com id 'loading' não encontrado.");
+function addMessage(text, sender) {
+  const msg = document.createElement("div");
+  msg.classList.add("message", sender);
+  msg.innerText = text;
+  chatWindow.appendChild(msg);
+  chatWindow.scrollTop = chatWindow.scrollHeight;
 }
 
-// ✅ Define a função no escopo global (necessário para funcionar com onclick no HTML)
-function sendMessage() {
-  const pergunta = input.value.trim();
-  if (!pergunta) return;
+async function sendMessage() {
+  const text = input.value.trim();
+  if (!text) return;
 
-  outputDiv.innerHTML = `<strong>Você:</strong> ${pergunta}<br><em>SentinelaBot:</em> pensando...`;
+  addMessage(text, "user");
+  input.value = "";
 
-  setTimeout(() => {
-    outputDiv.innerHTML = `<strong>Você:</strong> ${pergunta}<br><em>SentinelaBot:</em> Esta é uma resposta simulada para: "${pergunta}"`;
-    input.value = "";
-  }, 1500);
+  addMessage("Pensando...", "bot");
+
+  try {
+    const res = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt: text }),
+    });
+
+    const data = await res.json();
+    const resposta = data.reply || "Desculpe, não entendi.";
+
+    // remove o "Pensando..." anterior
+    const pensou = chatWindow.querySelector(".bot:last-child");
+    if (pensou?.innerText === "Pensando...") {
+      pensou.remove();
+    }
+
+    addMessage(resposta, "bot");
+  } catch (error) {
+    console.error(error);
+    addMessage("Erro ao obter resposta da IA.", "bot");
+  }
 }
+
+sendBtn.addEventListener("click", sendMessage);
+input.addEventListener("keypress", (e) => {
+  if (e.key === "Enter") sendMessage();
+});
+
+addMessage("SentinelaBot pronto! Como posso te ajudar?", "bot");
