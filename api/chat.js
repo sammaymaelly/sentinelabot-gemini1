@@ -25,13 +25,20 @@ export default async function handler(req, res) {
 
     const result = await response.json();
 
+    // VERIFICA SE A RESPOSTA ESTÁ NO FORMATO ESPERADO
     const reply =
-      result.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ||
-      "Desculpe, a IA não respondeu corretamente.";
+      result.candidates &&
+      result.candidates[0] &&
+      result.candidates[0].content &&
+      result.candidates[0].content.parts &&
+      result.candidates[0].content.parts[0] &&
+      result.candidates[0].content.parts[0].text
+        ? result.candidates[0].content.parts[0].text.trim()
+        : "Desculpe, a IA não respondeu corretamente.";
 
     return res.status(200).json({ reply });
   } catch (error) {
-    console.error("Erro na Gemini:", error);
+    console.error("Erro na IA:", error);
     return res.status(500).json({ error: "Erro interno ao gerar resposta." });
   }
 }
