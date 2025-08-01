@@ -1,44 +1,40 @@
-export default async function handler(req, res) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
-  }
+document.getElementById('sendBtn').addEventListener('click', sendMessage);
+document.getElementById('userInput').addEventListener('keypress', function (e) {
+  if (e.key === 'Enter') sendMessage();
+});
 
-  const { prompt } = req.body;
+async function sendMessage() {
+  const inputField = document.getElementById('userInput');
+  const message = inputField.value.trim();
+  if (!message) return;
 
-  if (!prompt) {
-    return res.status(400).json({ error: "Prompt ausente" });
-  }
+  appendMessage(message, 'user');
+  inputField.value = '';
 
   try {
-    const response = await fetch(
-      "https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=AIzaSyCBuWvTJLdn_glwACK7weWY0lwDLBW8vbo",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          contents: [{ role: "user", parts: [{ text: prompt }] }]
-        })
-      }
-    );
+    const response = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt: message })
+    });
 
-    const result = await response.json();
-
-    // VERIFICA SE A RESPOSTA ESTÁ NO FORMATO ESPERADO
-    const reply =
-      result.candidates &&
-      result.candidates[0] &&
-      result.candidates[0].content &&
-      result.candidates[0].content.parts &&
-      result.candidates[0].content.parts[0] &&
-      result.candidates[0].content.parts[0].text
-        ? result.candidates[0].content.parts[0].text.trim()
-        : "Desculpe, a IA não respondeu corretamente.";
-
-    return res.status(200).json({ reply });
+    const data = await response.json();
+    if (response.ok && data.text) {
+      appendMessage(data.text, 'bot');
+    } else {
+      appendMessage('Desculpe, a IA não respondeu corretamente.', 'bot');
+    }
   } catch (error) {
-    console.error("Erro na IA:", error);
-    return res.status(500).json({ error: "Erro interno ao gerar resposta." });
+    console.error(error);
+    appendMessage('Erro ao conectar com a IA.', 'bot');
   }
+}
+
+function appendMessage(text, sender) {
+  const chatWindow = document.getElementById('chat-window');
+  const messageElem = document.createElement('div');
+  messageElem.className = `message ${sender}`;
+  messageElem.textContent = text;
+  chatWindow.appendChild(messageElem);
+  chatWindow.scrollTop = chatWindow.scrollHeight;
 }
