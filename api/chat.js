@@ -10,31 +10,32 @@ export default async function handler(req, res) {
   }
 
   try {
-    const geminiResponse = await fetch(
-      "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=AIzaSyCBuWvTJLdn_glwACK7weWY0lwDLBW8vbo",
+    const geminiRes = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=AIzaSyCBuWvTJLdn_glwACK7weWY0lwDLBW8vbo`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           contents: [
             {
-              parts: [{ text: prompt }],
               role: "user",
+              parts: [{ text: prompt }],
             },
           ],
         }),
       }
     );
 
-    const data = await geminiResponse.json();
+    const result = await geminiRes.json();
 
     const reply =
-      data?.candidates?.[0]?.content?.parts?.[0]?.text ||
-      "Desculpe, não entendi.";
+      result?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ||
+      result?.candidates?.[0]?.content?.text?.trim() ||
+      "Desculpe, a IA não respondeu.";
 
     return res.status(200).json({ reply });
   } catch (error) {
-    console.error("Erro na API Gemini:", error);
-    return res.status(500).json({ error: "Erro ao gerar resposta." });
+    console.error("Erro ao consultar a API Gemini:", error);
+    return res.status(500).json({ error: "Erro interno ao gerar resposta." });
   }
 }
